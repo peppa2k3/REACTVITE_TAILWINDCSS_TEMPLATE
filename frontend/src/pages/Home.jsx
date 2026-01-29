@@ -1,159 +1,190 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Github, Linkedin, Download, ArrowRight } from 'lucide-react';
-import { userAPI, projectsAPI } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { LogOut, User, Shield } from 'lucide-react';
 
 const Home = () => {
-  const [user, setUser] = useState(null);
-  const [featuredProjects, setFeaturedProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [userData, projectsData] = await Promise.all([
-          userAPI.getUser(),
-          projectsAPI.getProjects(true, 3),
-        ]);
-        setUser(userData);
-        setFeaturedProjects(projectsData);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600"></div>
-      </div>
-    );
-  }
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-12 space-y-20">
-      {/* Hero Section */}
-      <section className="relative">
-        <div className="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500 rounded-3xl p-1 shadow-2xl">
-          <div className="bg-white rounded-3xl p-8 md:p-12">
-            <div className="flex flex-col md:flex-row items-center gap-8">
-              {/* Avatar */}
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full blur opacity-75 group-hover:opacity-100 transition"></div>
-                <img
-                  src={user?.avatar || '/api/placeholder/200/200'}
-                  alt="Avatar"
-                  className="relative w-40 h-40 md:w-48 md:h-48 rounded-full object-cover border-4 border-white"
-                />
-              </div>
-
-              {/* Info */}
-              <div className="flex-1 text-center md:text-left space-y-4">
-                <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  {user?.firstname} {user?.lastname}
-                </h1>
-                <p className="text-2xl md:text-3xl text-gray-600 font-medium">
-                  {user?.jobs || 'Fullstack Developer'}
-                </p>
-                <p className="text-gray-600 text-lg max-w-2xl">
-                  {user?.another ||
-                    'Đam mê xây dựng các ứng dụng web tối ưu và trải nghiệm người dùng mượt mà.'}
-                </p>
-
-                {/* Social Links */}
-                <div className="flex justify-center md:justify-start gap-4 pt-4">
-                  {user?.contact?.github && (
-                    <a
-                      href={user.contact.github}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-full font-semibold hover:bg-gray-800 transition transform hover:scale-105 shadow-lg"
-                    >
-                      <Github size={20} />
-                      GitHub
-                    </a>
-                  )}
-                  {user?.contact?.linkedin && (
-                    <a
-                      href={user.contact.linkedin}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-blue-700 transition transform hover:scale-105 shadow-lg"
-                    >
-                      <Linkedin size={20} />
-                      LinkedIn
-                    </a>
-                  )}
-                  <a
-                    href="/cv.pdf"
-                    download
-                    className="flex items-center gap-2 border-2 border-purple-600 text-purple-600 px-6 py-3 rounded-full font-semibold hover:bg-purple-600 hover:text-white transition transform hover:scale-105 shadow-lg"
-                  >
-                    <Download size={20} />
-                    Download CV
-                  </a>
-                </div>
-              </div>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+      {/* Navbar */}
+      <nav className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <h1 className="text-2xl font-bold text-indigo-600">Auth App</h1>
+            </div>
+            <div className="flex items-center space-x-4">
+              {user?.role === 'admin' && (
+                <button
+                  onClick={() => navigate('/admin/users')}
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition"
+                >
+                  <Shield size={18} className="mr-2" />
+                  Admin Panel
+                </button>
+              )}
+              <button
+                onClick={handleLogout}
+                className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition"
+              >
+                <LogOut size={18} className="mr-2" />
+                Logout
+              </button>
             </div>
           </div>
         </div>
-      </section>
+      </nav>
 
-      {/* Featured Projects */}
-      <section className="space-y-8">
-        <div className="flex justify-between items-center">
-          <h2 className="text-4xl font-bold text-gray-900">
-            Featured{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
-              Projects
-            </span>
-          </h2>
-          <Link
-            to="/projects"
-            className="flex items-center gap-2 text-blue-600 font-semibold hover:gap-4 transition-all"
-          >
-            View All <ArrowRight size={20} />
-          </Link>
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="text-center mb-12">
+          <h2 className="text-5xl font-bold text-gray-900 mb-4">Hello World! 👋</h2>
+          <p className="text-xl text-gray-600">Welcome to your authenticated home page</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featuredProjects.map((project) => (
-            <Link
-              key={project._id}
-              to={`/projects/${project._id}`}
-              className="group relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2"
+        {/* User Card */}
+        <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-8">
+          <div className="flex items-center space-x-4 mb-6">
+            <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
+              {user?.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt="Avatar"
+                  className="w-full h-full rounded-full object-cover"
+                />
+              ) : (
+                <User size={40} className="text-white" />
+              )}
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-gray-900">{user?.fullName}</h3>
+              <p className="text-gray-600">{user?.email}</p>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-200 pt-6 space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600 font-medium">Role:</span>
+              <span
+                className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                  user?.role === 'admin'
+                    ? 'bg-purple-100 text-purple-800'
+                    : 'bg-blue-100 text-blue-800'
+                }`}
+              >
+                {user?.role === 'admin' ? '👑 Admin' : '👤 User'}
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600 font-medium">Status:</span>
+              <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
+                ✓ Verified
+              </span>
+            </div>
+
+            {user?.phone && (
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600 font-medium">Phone:</span>
+                <span className="text-gray-900">{user.phone}</span>
+              </div>
+            )}
+
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600 font-medium">User ID:</span>
+              <span className="text-gray-900 text-sm font-mono">{user?.id}</span>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="mt-8 flex gap-4">
+            <button
+              onClick={() => navigate('/profile')}
+              className="flex-1 bg-indigo-600 text-white py-3 px-6 rounded-lg hover:bg-indigo-700 transition font-medium"
             >
-              <div className="aspect-video bg-gradient-to-br from-blue-400 to-purple-500 overflow-hidden">
-                {project.images?.image1 ? (
-                  <img
-                    src={project.images.image1}
-                    alt={project.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-white text-2xl font-bold">
-                    {project.name.charAt(0)}
-                  </div>
-                )}
-              </div>
-              <div className="p-6 space-y-3">
-                <span className="inline-block px-3 py-1 bg-blue-100 text-blue-600 rounded-full text-xs font-semibold uppercase">
-                  {project.type}
-                </span>
-                <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition">
-                  {project.name}
-                </h3>
-                <p className="text-gray-600 line-clamp-2">{project.maindesc}</p>
-              </div>
-            </Link>
-          ))}
+              View Profile
+            </button>
+            {user?.role === 'admin' && (
+              <button
+                onClick={() => navigate('/admin/users')}
+                className="flex-1 bg-purple-600 text-white py-3 px-6 rounded-lg hover:bg-purple-700 transition font-medium"
+              >
+                Manage Users
+              </button>
+            )}
+          </div>
         </div>
-      </section>
+
+        {/* Features */}
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <div className="bg-white p-6 rounded-xl shadow-md">
+            <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
+              <svg
+                className="w-6 h-6 text-indigo-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Secure Authentication</h3>
+            <p className="text-gray-600 text-sm">JWT-based authentication with refresh tokens</p>
+          </div>
+
+          <div className="bg-white p-6 rounded-xl shadow-md">
+            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+              <svg
+                className="w-6 h-6 text-purple-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Role-Based Access</h3>
+            <p className="text-gray-600 text-sm">Protected routes for users and admins</p>
+          </div>
+
+          <div className="bg-white p-6 rounded-xl shadow-md">
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+              <svg
+                className="w-6 h-6 text-green-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Email Verification</h3>
+            <p className="text-gray-600 text-sm">OTP-based email and password reset</p>
+          </div>
+        </div>
+      </main>
     </div>
   );
 };
