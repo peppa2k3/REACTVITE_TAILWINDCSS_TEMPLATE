@@ -1,4 +1,4 @@
-name: CI-CD-combine
+name: CI-CD-combinegti 
 
 on:
   push:
@@ -48,7 +48,7 @@ jobs:
           docker push peppa2k3/vite-template-backend:${{env.VERSION}}
       - name: build & push frontend
         run: |
-          docker build -t peppa2k3/vite-template-frontend:${{env.VERSION}} ./client
+          docker build -t peppa2k3/vite-template-frontend:${{env.VERSION}} ./frontend
           docker push peppa2k3/vite-template-frontend:${{env.VERSION}}
 
       - name: Deploy to VPS
