@@ -4,7 +4,6 @@ const URL_recommendSystem = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0
 //import.meta.env.VITE_API_BASE_URL || "https://hai2806.pythonanywhere.com/";
 // export const socket = io(URL);
 //RESTFUl API backend
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'https://apisocial.dangngochai.io.vn/api/';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.dangngochai.io.vn';
 
 export { API_BASE_URL, URL_Socket, URL_recommendSystem };
