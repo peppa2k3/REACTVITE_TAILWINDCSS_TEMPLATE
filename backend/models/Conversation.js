@@ -1,4 +1,5 @@
-const mongoose = require("mongoose");
+// const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const conversationSchema = new mongoose.Schema(
   {
@@ -58,4 +59,7 @@ conversationSchema.methods.isParticipant = function (userId) {
   return this.participants.some((p) => p.toString() === userId.toString());
 };
 
-module.exports = mongoose.model("Conversation", conversationSchema);
+// module.exports = mongoose.model("Conversation", conversationSchema);
+const Conversation = mongoose.model("Conversation", conversationSchema);
+
+export default Conversation;

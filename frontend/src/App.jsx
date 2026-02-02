@@ -13,6 +13,10 @@ import Home from './pages/Home';
 import AdminUsers from './pages/AdminUsers';
 import EditUser from './pages/EditUser';
 import GoogleAuthCallback from './pages/GoogleAuthCallback';
+import Chat from './pages/Chat';
+import { ChatProvider } from './contexts/ChatContext';
+import { SocketProvider } from './contexts/SocketContext';
+import { VideoCallProvider } from './contexts/VideoCallContext';
 
 function App() {
   return (
@@ -73,7 +77,21 @@ function App() {
               </ProtectedRoute>
             }
           />
-
+          {/* Protected Routes -chat */}
+          <Route
+            path="/chat"
+            element={
+              <ProtectedRoute>
+                <SocketProvider>
+                  <ChatProvider>
+                    <VideoCallProvider>
+                      <Chat />
+                    </VideoCallProvider>{' '}
+                  </ChatProvider>
+                </SocketProvider>
+              </ProtectedRoute>
+            }
+          />
           {/* Admin Routes - yêu cầu đăng nhập và role admin */}
           <Route
             path="/admin/users"

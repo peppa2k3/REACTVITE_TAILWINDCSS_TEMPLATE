@@ -76,6 +76,6 @@ export const SocketProvider = ({ children }) => {
     onlineUsers,
     isUserOnline: (userId) => onlineUsers.has(userId),
   };
-
+  console.log('SocketContext is ok');
   return <SocketContext.Provider value={value}>{children}</SocketContext.Provider>;
 };

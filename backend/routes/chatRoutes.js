@@ -1,9 +1,18 @@
-const express = require("express");
+// const express = require("express");
+// const router = express.Router();
+// const chatController = require("../controllers/chatController");
+// const { authenticate } = require("../middleware/auth");
+// const multer = require("multer");
+// const path = require("path");
+
+//import type module
+import express from "express";
+import chatController from "../controllers/chatController.js";
+import { protect } from "../middleware/auth.js";
+import multer from "multer";
+import path from "path";
+
 const router = express.Router();
-const chatController = require("../controllers/chatController");
-const { authenticate } = require("../middleware/auth");
-const multer = require("multer");
-const path = require("path");
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -44,7 +53,7 @@ const upload = multer({
 });
 
 // All routes require authentication
-router.use(authenticate);
+router.use(protect);
 
 // Conversation routes
 router.get("/conversations", chatController.getConversations);
@@ -67,4 +76,5 @@ router.delete("/messages/:messageId", chatController.deleteMessage);
 // Search users
 router.get("/users/search", chatController.searchUsers);
 
-module.exports = router;
+// module.exports = router;
+export default router;

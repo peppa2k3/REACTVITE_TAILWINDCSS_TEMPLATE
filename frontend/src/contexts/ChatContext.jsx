@@ -253,6 +253,6 @@ export const ChatProvider = ({ children }) => {
     stopTyping,
     deleteMessage,
   };
-
+  console.log('chatContext is ok');
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 };

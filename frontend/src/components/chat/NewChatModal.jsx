@@ -123,7 +123,7 @@ const NewChatModal = ({ onClose }) => {
                     />
                   ) : (
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold text-lg">
-                      {user.name.charAt(0).toUpperCase()}
+                      {user.email}
                     </div>
                   )}
 

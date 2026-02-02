@@ -1,4 +1,6 @@
-const mongoose = require("mongoose");
+// const mongoose = require("mongoose");
+import mongoose from "mongoose";
+
 
 const messageSchema = new mongoose.Schema(
   {
@@ -67,4 +69,7 @@ const messageSchema = new mongoose.Schema(
 messageSchema.index({ conversationId: 1, createdAt: -1 });
 messageSchema.index({ sender: 1 });
 
-module.exports = mongoose.model("Message", messageSchema);
+// module.exports = mongoose.model("Message", messageSchema);
+const Message = mongoose.model("Message", messageSchema);
+
+export default Message;

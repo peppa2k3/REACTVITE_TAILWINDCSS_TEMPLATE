@@ -1,4 +1,5 @@
-const mongoose = require("mongoose");
+// const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const videoCallSchema = new mongoose.Schema(
   {
@@ -44,4 +45,7 @@ const videoCallSchema = new mongoose.Schema(
 videoCallSchema.index({ conversationId: 1, createdAt: -1 });
 videoCallSchema.index({ roomId: 1 });
 
-module.exports = mongoose.model("VideoCall", videoCallSchema);
+// module.exports = mongoose.model("VideoCall", videoCallSchema);
+const VideoCall = mongoose.model("VideoCall", videoCallSchema);
+
+export default VideoCall;

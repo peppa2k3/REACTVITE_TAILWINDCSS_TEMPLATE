@@ -1,11 +1,11 @@
-const Conversation = require("../models/Conversation");
-const Message = require("../models/Message");
-const User = require("../models/User");
-const path = require("path");
-const fs = require("fs").promises;
+import Conversation from "../models/Conversation.js";
+import Message from "../models/Message.js";
+import User from "../models/User.js";
+import path from "path";
+import fs from "fs/promises";
 
 // Get all conversations for a user
-exports.getConversations = async (req, res) => {
+const getConversations = async (req, res) => {
   try {
     const userId = req.user.id;
 
@@ -42,7 +42,7 @@ exports.getConversations = async (req, res) => {
 };
 
 // Get or create conversation
-exports.getOrCreateConversation = async (req, res) => {
+const getOrCreateConversation = async (req, res) => {
   try {
     const { participantId } = req.body;
     const userId = req.user.id;
@@ -88,7 +88,7 @@ exports.getOrCreateConversation = async (req, res) => {
 };
 
 // Get messages for a conversation
-exports.getMessages = async (req, res) => {
+const getMessages = async (req, res) => {
   try {
     const { conversationId } = req.params;
     const { page = 1, limit = 50 } = req.query;
@@ -136,7 +136,7 @@ exports.getMessages = async (req, res) => {
 };
 
 // Send message
-exports.sendMessage = async (req, res) => {
+const sendMessage = async (req, res) => {
   try {
     const { conversationId, content, messageType = "text", replyTo } = req.body;
     const userId = req.user.id;
@@ -180,7 +180,7 @@ exports.sendMessage = async (req, res) => {
 };
 
 // Upload media
-exports.uploadMedia = async (req, res) => {
+const uploadMedia = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
@@ -242,7 +242,7 @@ exports.uploadMedia = async (req, res) => {
 };
 
 // Mark messages as read
-exports.markAsRead = async (req, res) => {
+const markAsRead = async (req, res) => {
   try {
     const { conversationId } = req.params;
     const userId = req.user.id;
@@ -278,7 +278,7 @@ exports.markAsRead = async (req, res) => {
 };
 
 // Delete message
-exports.deleteMessage = async (req, res) => {
+const deleteMessage = async (req, res) => {
   try {
     const { messageId } = req.params;
     const userId = req.user.id;
@@ -305,7 +305,7 @@ exports.deleteMessage = async (req, res) => {
 };
 
 // Search users for new conversation
-exports.searchUsers = async (req, res) => {
+const searchUsers = async (req, res) => {
   try {
     const { query } = req.query;
     const userId = req.user.id;
@@ -329,4 +329,15 @@ exports.searchUsers = async (req, res) => {
     console.error("Search users error:", error);
     res.status(500).json({ message: "Server error" });
   }
+};
+
+export default {
+  getConversations,
+  getOrCreateConversation,
+  getMessages,
+  sendMessage,
+  uploadMedia,
+  markAsRead,
+  deleteMessage,
+  searchUsers,
 };
