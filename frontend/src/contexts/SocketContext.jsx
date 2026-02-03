@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
-
+import { URL_Socket } from './../env/apiURL';
 const SocketContext = createContext();
 
 export const useSocket = () => {
   const context = useContext(SocketContext);
+  console.log(context);
   if (!context) {
     throw new Error('useSocket must be used within SocketProvider');
   }
@@ -20,6 +21,7 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     if (!token || !user) {
+      console.log(token, user);
       if (socket) {
         socket.disconnect();
         setSocket(null);
@@ -27,8 +29,9 @@ export const SocketProvider = ({ children }) => {
       }
       return;
     }
+    console.log(URL_Socket);
 
-    const socketInstance = io(import.meta.env.VITE_API_URL || 'http://localhost:5000', {
+    const socketInstance = io(URL_Socket || 'http://localhost:5000', {
       auth: {
         token: token,
       },
@@ -41,7 +44,9 @@ export const SocketProvider = ({ children }) => {
       console.log('Socket connected');
       setIsConnected(true);
     });
-
+    socketInstance.on('connect_error', (err) => {
+      console.log('Socket connect error:', err.message);
+    });
     socketInstance.on('disconnect', () => {
       console.log('Socket disconnected');
       setIsConnected(false);

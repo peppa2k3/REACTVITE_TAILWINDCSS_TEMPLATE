@@ -3,7 +3,7 @@ import { useChat } from '../../contexts/ChatContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { format, isToday, isYesterday } from 'date-fns';
 import { vi } from 'date-fns/locale';
-
+import { API_BASE_URL } from '../../env/apiURL';
 const MessageList = () => {
   const { messages, loading } = useChat();
   const { user } = useAuth();
@@ -44,12 +44,10 @@ const MessageList = () => {
         return (
           <div className="max-w-sm">
             <img
-              src={`${import.meta.env.VITE_API_URL}${message.mediaUrl}`}
+              src={`${API_BASE_URL}${message.mediaUrl}`}
               alt="Image"
               className="rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-              onClick={() =>
-                window.open(`${import.meta.env.VITE_API_URL}${message.mediaUrl}`, '_blank')
-              }
+              onClick={() => window.open(`${API_BASE_URL}${message.mediaUrl}`, '_blank')}
             />
             {message.content && (
               <p className="mt-2 whitespace-pre-wrap break-words">{message.content}</p>
@@ -63,7 +61,7 @@ const MessageList = () => {
             <video
               controls
               className="rounded-lg w-full"
-              src={`${import.meta.env.VITE_API_URL}${message.mediaUrl}`}
+              src={`${API_BASE_URL}${message.mediaUrl}`}
             />
             {message.content && (
               <p className="mt-2 whitespace-pre-wrap break-words">{message.content}</p>
@@ -74,7 +72,7 @@ const MessageList = () => {
       case 'file':
         return (
           <a
-            href={`${import.meta.env.VITE_API_URL}${message.mediaUrl}`}
+            href={`${API_BASE_URL}${message.mediaUrl}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"

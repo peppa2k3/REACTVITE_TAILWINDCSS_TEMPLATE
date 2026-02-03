@@ -55,6 +55,8 @@ export const ChatProvider = ({ children }) => {
   const sendMessage = useCallback(
     async (conversationId, content, messageType = 'text', replyTo = null) => {
       if (!socket || !isConnected) {
+        console.log(socket);
+        console.log(isConnected);
         console.error('Socket not connected');
         return;
       }
@@ -68,6 +70,24 @@ export const ChatProvider = ({ children }) => {
     },
     [socket, isConnected]
   );
+  // const sendMessage = useCallback(
+  //   async (conversationId, content, messageType = 'text', replyTo = null) => {
+  //     const { socket, isConnected } = useSocket;
+
+  //     if (!socket || !isConnected) {
+  //       console.warn('⛔ Socket not ready yet');
+  //       return;
+  //     }
+
+  //     socket.emit('message:send', {
+  //       conversationId,
+  //       content,
+  //       messageType,
+  //       replyTo,
+  //     });
+  //   },
+  //   [useSocket]
+  // );
 
   // Send media
   const sendMedia = useCallback(async (conversationId, file, replyTo = null) => {

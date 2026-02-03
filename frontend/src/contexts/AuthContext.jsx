@@ -5,6 +5,7 @@ const AuthContext = createContext();
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
+  console.log('contextauth', context);
   if (!context) {
     throw new Error('useAuth must be used within AuthProvider');
   }
@@ -14,7 +15,8 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-
+  //add setToken
+  const [token, setToken] = useState(localStorage.getItem('accessToken'));
   useEffect(() => {
     checkAuth();
   }, []);
@@ -25,6 +27,8 @@ export const AuthProvider = ({ children }) => {
       const savedUser = localStorage.getItem('user');
 
       if (token && savedUser) {
+        //add setToken
+        setToken(token);
         setUser(JSON.parse(savedUser));
       }
     } catch (error) {
@@ -92,6 +96,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const value = {
+    token,
     user,
     loading,
     login,

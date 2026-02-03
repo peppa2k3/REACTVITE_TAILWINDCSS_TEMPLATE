@@ -6,6 +6,8 @@ import NewChatModal from '../components/chat/NewChatModal';
 import IncomingCallModal from '../components/chat/IncomingCallModal';
 import VideoCallWindow from '../components/chat/VideoCallWindow';
 import { useVideoCall } from '../contexts/VideoCallContext';
+import { ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Chat = () => {
   const [showNewChat, setShowNewChat] = useState(false);
@@ -14,7 +16,7 @@ const Chat = () => {
 
   const { loadConversations, activeConversation } = useChat();
   const { incomingCall, activeCall } = useVideoCall();
-
+  const navigate = useNavigate();
   useEffect(() => {
     loadConversations();
   }, [loadConversations]);
@@ -46,6 +48,13 @@ const Chat = () => {
     <div className="h-screen flex flex-col bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b px-4 py-3 flex items-center justify-between shadow-sm">
+        {' '}
+        <button
+          onClick={() => navigate('/home')}
+          className="p-2 hover:bg-gray-100 rounded-lg transition"
+        >
+          <ArrowLeft size={24} />
+        </button>
         <h1 className="text-xl font-semibold text-gray-800">Messages</h1>
         <button
           onClick={() => setShowNewChat(true)}
