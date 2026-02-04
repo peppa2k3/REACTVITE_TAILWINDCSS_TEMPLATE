@@ -1,9 +1,12 @@
-const VideoCall = require("../models/VideoCall");
-const Conversation = require("../models/Conversation");
-const { v4: uuidv4 } = require("uuid");
+// const VideoCall = require("../models/VideoCall");
+// const Conversation = require("../models/Conversation");
+// const { v4: uuidv4 } = require("uuid");
+import VideoCall from "../models/VideoCall.js";
+import Conversation from "../models/Conversation.js";
+import { v4 as uuidv4 } from "uuid";
 
 // Initiate video call
-exports.initiateCall = async (req, res) => {
+const initiateCall = async (req, res) => {
   try {
     const { conversationId } = req.body;
     const userId = req.user.id;
@@ -45,7 +48,7 @@ exports.initiateCall = async (req, res) => {
 };
 
 // Join video call
-exports.joinCall = async (req, res) => {
+const joinCall = async (req, res) => {
   try {
     const { callId } = req.params;
     const userId = req.user.id;
@@ -86,7 +89,7 @@ exports.joinCall = async (req, res) => {
 };
 
 // Leave video call
-exports.leaveCall = async (req, res) => {
+const leaveCall = async (req, res) => {
   try {
     const { callId } = req.params;
     const userId = req.user.id;
@@ -126,7 +129,7 @@ exports.leaveCall = async (req, res) => {
 };
 
 // End video call
-exports.endCall = async (req, res) => {
+const endCall = async (req, res) => {
   try {
     const { callId } = req.params;
     const userId = req.user.id;
@@ -158,7 +161,7 @@ exports.endCall = async (req, res) => {
 };
 
 // Reject call
-exports.rejectCall = async (req, res) => {
+const rejectCall = async (req, res) => {
   try {
     const { callId } = req.params;
 
@@ -179,7 +182,7 @@ exports.rejectCall = async (req, res) => {
 };
 
 // Get call history
-exports.getCallHistory = async (req, res) => {
+const getCallHistory = async (req, res) => {
   try {
     const { conversationId } = req.params;
     const userId = req.user.id;
@@ -203,4 +206,13 @@ exports.getCallHistory = async (req, res) => {
     console.error("Get call history error:", error);
     res.status(500).json({ message: "Server error" });
   }
+};
+
+export default {
+  initiateCall,
+  joinCall,
+  leaveCall,
+  endCall,
+  rejectCall,
+  getCallHistory,
 };

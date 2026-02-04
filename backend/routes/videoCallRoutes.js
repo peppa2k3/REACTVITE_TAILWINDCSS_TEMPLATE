@@ -11,6 +11,7 @@ import chatController from "../controllers/chatController.js";
 import { protect } from "../middleware/auth.js";
 import multer from "multer";
 import path from "path";
+import videoCallController from "../controllers/videoCallController.js";
 
 const router = express.Router();
 
@@ -76,5 +77,12 @@ router.delete("/messages/:messageId", chatController.deleteMessage);
 // Search users
 router.get("/users/search", chatController.searchUsers);
 
+///test video call
+router.post("/calls", videoCallController.initiateCall);
+router.post("/calls/:id/join", videoCallController.joinCall);
+router.post("/calls/:id/leave", videoCallController.leaveCall);
+router.post("/calls/:id/end", videoCallController.endCall);
+router.post("/calls/:id/reject", videoCallController.rejectCall);
+router.get("/conversations/:id/calls", videoCallController.getCallHistory);
 // module.exports = router;
 export default router;
