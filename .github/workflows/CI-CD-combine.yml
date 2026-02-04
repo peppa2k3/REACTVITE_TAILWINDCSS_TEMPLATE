@@ -1,8 +1,8 @@
-name: CI-CD-combinegti 
+name: CI-CD-combinegti
 
 on:
   push:
-    branches: ["dev/feature/auth"]
+    branches: ["dev/feature/auth_chat"]
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
