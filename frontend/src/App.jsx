@@ -18,6 +18,7 @@ import { ChatProvider } from './contexts/ChatContext';
 import { SocketProvider } from './contexts/SocketContext';
 import { VideoCallProvider } from './contexts/VideoCallContext';
 import SocketTest from './SocketTest';
+import Newsfeed from './pages/Newsfeed';
 
 function App() {
   return (
@@ -79,6 +80,7 @@ function App() {
         />
         {/* Protected Routes -chat */}
         <Route path="/chat" element={<Chat />} />
+        <Route path="/newsfeed" element={<Newsfeed />} />
         {/* Admin Routes - yêu cầu đăng nhập và role admin */}
         <Route
           path="/admin/users"

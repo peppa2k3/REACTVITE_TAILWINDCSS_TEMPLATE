@@ -28,6 +28,7 @@ import connectDB from "./config/database.js";
 import authRoutes from "./routes/authRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
+import postRoutes from "./routes/postRoutes.js";
 import videoCallRoutes from "./routes/videoCallRoutes.js";
 import { initializeSocket } from "./socket/chatSocket.js";
 
@@ -82,6 +83,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/video", videoCallRoutes);
+app.use("/api/posts", postRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
