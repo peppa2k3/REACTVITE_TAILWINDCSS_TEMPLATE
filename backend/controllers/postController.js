@@ -2,22 +2,30 @@ import Post from "../models/Post.js";
 import Comment from "../models/Comment.js";
 import User from "../models/User.js";
 import mongoose from "mongoose";
-
+const BASE_URL = process.env.BASE_URL || "http://localhost:5000";
 // Create a new post
 export const createPost = async (req, res) => {
   try {
-    const { content, media, status, visibility, location } = JSON.parse(
-      req.body.data,
-    );
+    const { content, status, visibility, location } = JSON.parse(req.body.data);
+    const files = req.files || [];
     const userId = req.user.id;
-    console.log(content, media, status, visibility, location);
+    console.log(req.files);
     // Validate: at least content or media required
-    if (!content && (!media || media.length === 0)) {
+    if (!content && (!files || files.length === 0)) {
       return res.status(400).json({
         message: "Post must have content or media",
       });
     }
+    // MAP FILES → MEDIA SCHEMA
+    const media = files.map((file) => {
+      const isVideo = file.mimetype.startsWith("video");
 
+      return {
+        type: isVideo ? "video" : "image",
+        url: `${BASE_URL}/uploads/posts/${file.filename}`, // hoặc file.path
+        thumbnail: null, // sau này xử lý video thì update
+      };
+    });
     const post = new Post({
       author: userId,
       content,
