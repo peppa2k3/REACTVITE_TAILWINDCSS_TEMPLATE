@@ -36,47 +36,48 @@ import {
   deleteMessage,
   markAsRead,
 } from "../controllers/groupChatController.js";
-import { authenticate } from "../middleware/auth.js";
+import { protect } from "../middleware/auth.js";
 
 const router = express.Router();
-
+// All routes require authentication
+router.use(protect);
 // Group routes
-router.post("/", authenticate, createGroup);
-router.get("/", authenticate, getGroups);
-router.get("/my-groups", authenticate, getUserGroups);
-router.get("/:id", authenticate, getGroupById);
-router.put("/:id", authenticate, updateGroup);
-router.delete("/:id", authenticate, deleteGroup);
+router.post("/", createGroup);
+router.get("/", protect, getGroups);
+router.get("/my-groups", protect, getUserGroups);
+router.get("/:id", protect, getGroupById);
+router.put("/:id", protect, updateGroup);
+router.delete("/:id", protect, deleteGroup);
 
 // Membership routes
-router.post("/:id/join", authenticate, joinGroup);
-router.post("/:id/leave", authenticate, leaveGroup);
-router.post("/:id/handle-request", authenticate, handleJoinRequest);
-router.post("/:id/manage-admin", authenticate, manageAdmin);
-router.post("/:id/remove-member", authenticate, removeMember);
+router.post("/:id/join", protect, joinGroup);
+router.post("/:id/leave", protect, leaveGroup);
+router.post("/:id/handle-request", protect, handleJoinRequest);
+router.post("/:id/manage-admin", protect, manageAdmin);
+router.post("/:id/remove-member", protect, removeMember);
 
 // Post routes
-router.post("/posts", authenticate, createGroupPost);
-router.get("/:groupId/posts", authenticate, getGroupPosts);
-router.get("/posts/:postId", authenticate, getGroupPost);
-router.put("/posts/:postId", authenticate, updateGroupPost);
-router.delete("/posts/:postId", authenticate, deleteGroupPost);
-router.post("/posts/:postId/like", authenticate, likeGroupPost);
-router.post("/posts/:postId/dislike", authenticate, dislikeGroupPost);
-router.post("/posts/:postId/pin", authenticate, togglePinPost);
-router.post("/posts/:postId/handle", authenticate, handlePendingPost);
+router.post("/posts", protect, createGroupPost);
+router.get("/:groupId/posts", protect, getGroupPosts);
+router.get("/posts/:postId", protect, getGroupPost);
+router.put("/posts/:postId", protect, updateGroupPost);
+router.delete("/posts/:postId", protect, deleteGroupPost);
+router.post("/posts/:postId/like", protect, likeGroupPost);
+router.post("/posts/:postId/dislike", protect, dislikeGroupPost);
+router.post("/posts/:postId/pin", protect, togglePinPost);
+router.post("/posts/:postId/handle", protect, handlePendingPost);
 
 // Comment routes
-router.post("/comments", authenticate, createComment);
-router.get("/posts/:postId/comments", authenticate, getComments);
-router.put("/comments/:commentId", authenticate, updateComment);
-router.delete("/comments/:commentId", authenticate, deleteComment);
-router.post("/comments/:commentId/like", authenticate, likeComment);
+router.post("/comments", protect, createComment);
+router.get("/posts/:postId/comments", protect, getComments);
+router.put("/comments/:commentId", protect, updateComment);
+router.delete("/comments/:commentId", protect, deleteComment);
+router.post("/comments/:commentId/like", protect, likeComment);
 
 // Chat routes
-router.post("/chat/send", authenticate, sendMessage);
-router.get("/:groupId/messages", authenticate, getMessages);
-router.delete("/messages/:messageId", authenticate, deleteMessage);
-router.post("/:groupId/messages/read", authenticate, markAsRead);
+router.post("/chat/send", protect, sendMessage);
+router.get("/:groupId/messages", protect, getMessages);
+router.delete("/messages/:messageId", protect, deleteMessage);
+router.post("/:groupId/messages/read", protect, markAsRead);
 
 export default router;

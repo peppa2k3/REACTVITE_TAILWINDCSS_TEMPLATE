@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useSocket } from './SocketContext';
-import { useAuth } from './AuthContext';
+import { useSocket } from '../contexts/SocketContext';
+import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
-import { API_URL } from '../env/apiURL';
+import { API_BASE_URL } from '../env/apiURL';
 
 const GroupContext = createContext();
 
@@ -28,7 +28,7 @@ export const GroupProvider = ({ children }) => {
   const fetchMyGroups = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/api/groups/my-groups`, {
+      const response = await axios.get(`${API_BASE_URL}/api/groups/my-groups`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -46,7 +46,7 @@ export const GroupProvider = ({ children }) => {
     try {
       setLoading(true);
       const params = new URLSearchParams(filters);
-      const response = await axios.get(`${API_URL}/api/groups?${params}`, {
+      const response = await axios.get(`${API_BASE_URL}/api/groups?${params}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -63,7 +63,7 @@ export const GroupProvider = ({ children }) => {
   // Create group
   const createGroup = async (groupData) => {
     try {
-      const response = await axios.post(`${API_URL}/api/groups`, groupData, {
+      const response = await axios.post(`${API_BASE_URL}/api/groups`, groupData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -80,7 +80,7 @@ export const GroupProvider = ({ children }) => {
   const joinGroup = async (groupId) => {
     try {
       const response = await axios.post(
-        `${API_URL}/api/groups/${groupId}/join`,
+        `${API_BASE_URL}/api/groups/${groupId}/join`,
         {},
         {
           headers: {
@@ -100,7 +100,7 @@ export const GroupProvider = ({ children }) => {
   const leaveGroup = async (groupId) => {
     try {
       await axios.post(
-        `${API_URL}/api/groups/${groupId}/leave`,
+        `${API_BASE_URL}/api/groups/${groupId}/leave`,
         {},
         {
           headers: {
@@ -122,7 +122,7 @@ export const GroupProvider = ({ children }) => {
   const fetchGroupDetails = async (groupId) => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/api/groups/${groupId}`, {
+      const response = await axios.get(`${API_BASE_URL}/api/groups/${groupId}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -140,7 +140,7 @@ export const GroupProvider = ({ children }) => {
   // Fetch group posts
   const fetchGroupPosts = async (groupId, page = 1) => {
     try {
-      const response = await axios.get(`${API_URL}/api/groups/${groupId}/posts?page=${page}`, {
+      const response = await axios.get(`${API_BASE_URL}/api/groups/${groupId}/posts?page=${page}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -156,7 +156,7 @@ export const GroupProvider = ({ children }) => {
   // Create post
   const createPost = async (postData) => {
     try {
-      const response = await axios.post(`${API_URL}/api/groups/posts`, postData, {
+      const response = await axios.post(`${API_BASE_URL}/api/groups/posts`, postData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -181,7 +181,7 @@ export const GroupProvider = ({ children }) => {
   // Fetch group messages
   const fetchGroupMessages = async (groupId) => {
     try {
-      const response = await axios.get(`${API_URL}/api/groups/${groupId}/messages`, {
+      const response = await axios.get(`${API_BASE_URL}/api/groups/${groupId}/messages`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },

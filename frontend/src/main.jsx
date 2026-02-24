@@ -6,6 +6,7 @@ import { AuthProvider } from './contexts/AuthContext.jsx';
 import { SocketProvider } from './contexts/SocketContext.jsx';
 import { ChatProvider } from './contexts/ChatContext.jsx';
 import { VideoCallProvider } from './contexts/VideoCallContext.jsx';
+import { GroupProvider } from './contexts/GroupContext.jsx';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -15,7 +16,9 @@ createRoot(document.getElementById('root')).render(
         <ChatProvider>
           <VideoCallProvider>
             {' '}
-            <App />{' '}
+            <GroupProvider>
+              <App />{' '}
+            </GroupProvider>
           </VideoCallProvider>{' '}
         </ChatProvider>
       </SocketProvider>

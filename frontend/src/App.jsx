@@ -19,6 +19,11 @@ import { SocketProvider } from './contexts/SocketContext';
 import { VideoCallProvider } from './contexts/VideoCallContext';
 import SocketTest from './SocketTest';
 import Newsfeed from './pages/Newsfeed';
+import GroupHeader from './components/groups/GroupHeader';
+import GroupDetail from './pages/GroupDetail';
+import { GroupProvider } from './pages/Groups';
+import CreateGroupModal from './components/groups/CreateGroupModal';
+import ProfilePage from './pages/ProfilePage.demo';
 
 function App() {
   return (
@@ -80,7 +85,30 @@ function App() {
         />
         {/* Protected Routes -chat */}
         <Route path="/chat" element={<Chat />} />
-        <Route path="/newsfeed" element={<Newsfeed />} />
+        <Route
+          path="/newsfeed"
+          element={
+            <ProtectedRoute>
+              <Newsfeed />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/groups"
+          element={
+            <ProtectedRoute>
+              <CreateGroupModal />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
         {/* Admin Routes - yêu cầu đăng nhập và role admin */}
         <Route
           path="/admin/users"

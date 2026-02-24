@@ -1,88 +1,104 @@
-import GroupComment from "../models/GroupComment.js";
-import GroupPost from "../models/GroupPost.js";
+import GroupMessage from "../models/GroupMessage.js";
+import Group from "../models/Group.js";
 
-// Create comment
-export const createComment = async (req, res) => {
+// Send message in group
+export const sendMessage = async (req, res) => {
   try {
-    const { postId, content, parentCommentId } = req.body;
+    const { groupId, content, type, fileUrl, fileName, fileSize } = req.body;
     const userId = req.user._id;
 
-    const post = await GroupPost.findById(postId);
+    const group = await Group.findById(groupId);
 
-    if (!post) {
+    if (!group) {
       return res.status(404).json({
         success: false,
-        message: "Post not found",
+        message: "Group not found",
       });
     }
 
-    const comment = new GroupComment({
-      post: postId,
-      author: userId,
-      content,
-      parentComment: parentCommentId || null,
-    });
+    // Check if user is member
+    const isMember = group.members.some(
+      (m) => m.user.toString() === userId.toString(),
+    );
 
-    await comment.save();
-    await comment.populate("author", "name email avatar");
-
-    // Update post
-    if (!parentCommentId) {
-      post.comments.push(comment._id);
-    } else {
-      // Update parent comment
-      const parentComment = await GroupComment.findById(parentCommentId);
-      if (parentComment) {
-        parentComment.replies.push(comment._id);
-        await parentComment.save();
-      }
+    if (!isMember) {
+      return res.status(403).json({
+        success: false,
+        message: "Only members can send messages",
+      });
     }
 
-    await post.save();
+    const message = new GroupMessage({
+      group: groupId,
+      sender: userId,
+      content,
+      type: type || "text",
+      fileUrl,
+      fileName,
+      fileSize,
+    });
+
+    await message.save();
+    await message.populate("sender", "name email avatar");
 
     res.status(201).json({
       success: true,
-      data: comment,
+      data: message,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Error creating comment",
+      message: "Error sending message",
       error: error.message,
     });
   }
 };
 
-// Get comments for post
-export const getComments = async (req, res) => {
+// Get messages in group
+export const getMessages = async (req, res) => {
   try {
-    const { postId } = req.params;
-    const { page = 1, limit = 20 } = req.query;
+    const { groupId } = req.params;
+    const { page = 1, limit = 50 } = req.query;
+    const userId = req.user._id;
 
-    const comments = await GroupComment.find({
-      post: postId,
-      parentComment: null,
+    const group = await Group.findById(groupId);
+
+    if (!group) {
+      return res.status(404).json({
+        success: false,
+        message: "Group not found",
+      });
+    }
+
+    // Check if user is member
+    const isMember = group.members.some(
+      (m) => m.user.toString() === userId.toString(),
+    );
+
+    if (!isMember) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied",
+      });
+    }
+
+    const messages = await GroupMessage.find({
+      group: groupId,
+      isDeleted: false,
     })
-      .populate("author", "name email avatar")
-      .populate({
-        path: "replies",
-        populate: {
-          path: "author",
-          select: "name email avatar",
-        },
-      })
+      .populate("sender", "name email avatar")
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit);
 
-    const count = await GroupComment.countDocuments({
-      post: postId,
-      parentComment: null,
+    const count = await GroupMessage.countDocuments({
+      group: groupId,
+      isDeleted: false,
     });
 
     res.json({
       success: true,
-      data: comments,
+      data: messages.reverse(),
       totalPages: Math.ceil(count / limit),
       currentPage: page,
       total: count,
@@ -90,163 +106,94 @@ export const getComments = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Error fetching comments",
+      message: "Error fetching messages",
       error: error.message,
     });
   }
 };
 
-// Update comment
-export const updateComment = async (req, res) => {
+// Delete message
+export const deleteMessage = async (req, res) => {
   try {
-    const { content } = req.body;
-    const comment = await GroupComment.findById(req.params.commentId);
+    const { messageId } = req.params;
+    const message = await GroupMessage.findById(messageId);
 
-    if (!comment) {
+    if (!message) {
       return res.status(404).json({
         success: false,
-        message: "Comment not found",
+        message: "Message not found",
       });
     }
 
-    // Check if user is author
-    if (comment.author.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: "Only author can update comment",
-      });
-    }
-
-    comment.content = content;
-    comment.isEdited = true;
-    comment.editedAt = new Date();
-
-    await comment.save();
-    await comment.populate("author", "name email avatar");
-
-    res.json({
-      success: true,
-      data: comment,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Error updating comment",
-      error: error.message,
-    });
-  }
-};
-
-// Delete comment
-export const deleteComment = async (req, res) => {
-  try {
-    const comment = await GroupComment.findById(req.params.commentId);
-
-    if (!comment) {
-      return res.status(404).json({
-        success: false,
-        message: "Comment not found",
-      });
-    }
-
-    const post = await GroupPost.findById(comment.post).populate("group");
+    const group = await Group.findById(message.group);
     const userId = req.user._id;
 
-    // Check if user is author, admin, or creator
-    const isAuthor = comment.author.toString() === userId.toString();
-    const isAdmin = post.group.admins.some(
+    // Check if user is sender, admin, or creator
+    const isSender = message.sender.toString() === userId.toString();
+    const isAdmin = group.admins.some(
       (admin) => admin.toString() === userId.toString(),
     );
-    const isCreator = post.group.creator.toString() === userId.toString();
+    const isCreator = group.creator.toString() === userId.toString();
 
-    if (!isAuthor && !isAdmin && !isCreator) {
+    if (!isSender && !isAdmin && !isCreator) {
       return res.status(403).json({
         success: false,
-        message: "Unauthorized to delete comment",
+        message: "Unauthorized to delete message",
       });
     }
 
-    // Delete all replies
-    if (comment.replies.length > 0) {
-      await GroupComment.deleteMany({ _id: { $in: comment.replies } });
-    }
-
-    // Remove from parent or post
-    if (comment.parentComment) {
-      const parentComment = await GroupComment.findById(comment.parentComment);
-      if (parentComment) {
-        parentComment.replies = parentComment.replies.filter(
-          (r) => r.toString() !== comment._id.toString(),
-        );
-        await parentComment.save();
-      }
-    } else {
-      post.comments = post.comments.filter(
-        (c) => c.toString() !== comment._id.toString(),
-      );
-      await post.save();
-    }
-
-    await comment.deleteOne();
+    message.isDeleted = true;
+    message.deletedAt = new Date();
+    await message.save();
 
     res.json({
       success: true,
-      message: "Comment deleted successfully",
+      message: "Message deleted successfully",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Error deleting comment",
+      message: "Error deleting message",
       error: error.message,
     });
   }
 };
 
-// Like comment
-export const likeComment = async (req, res) => {
+// Mark messages as read
+export const markAsRead = async (req, res) => {
   try {
-    const comment = await GroupComment.findById(req.params.commentId);
+    const { groupId } = req.params;
     const userId = req.user._id;
 
-    if (!comment) {
-      return res.status(404).json({
-        success: false,
-        message: "Comment not found",
+    const messages = await GroupMessage.find({
+      group: groupId,
+      "readBy.user": { $ne: userId },
+    });
+
+    for (const message of messages) {
+      message.readBy.push({
+        user: userId,
+        readAt: new Date(),
       });
+      await message.save();
     }
-
-    const likeIndex = comment.likes.findIndex(
-      (like) => like.toString() === userId.toString(),
-    );
-
-    if (likeIndex > -1) {
-      comment.likes.splice(likeIndex, 1);
-    } else {
-      comment.likes.push(userId);
-    }
-
-    await comment.save();
 
     res.json({
       success: true,
-      data: {
-        likes: comment.likes.length,
-        isLiked: likeIndex === -1,
-      },
+      message: "Messages marked as read",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Error liking comment",
+      message: "Error marking messages as read",
       error: error.message,
     });
   }
 };
 
 export default {
-  createComment,
-  getComments,
-  updateComment,
-  deleteComment,
-  likeComment,
+  sendMessage,
+  getMessages,
+  deleteMessage,
+  markAsRead,
 };

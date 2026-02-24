@@ -4,8 +4,10 @@ import GroupMessage from "../models/GroupMessage.js";
 
 // Create new group
 export const createGroup = async (req, res) => {
+  console.log("creating...");
   try {
     const { name, description, type, avatar, cover } = req.body;
+    console.log(name, description);
     const userId = req.user._id;
 
     const group = new Group({
