@@ -51,8 +51,9 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_KEY }}
           script: |
-            cd /opt/vite-template
+            cd /opt/repo/REACTVITE_TAILWINDCSS_TEMPLATE
             sed -i "s|IMAGE_BE=.*|IMAGE_BE=$IMAGE_BE:$VERSION|" .env
+            git pull
             docker compose pull backend
             docker compose up -d backend
             docker image prune -f
