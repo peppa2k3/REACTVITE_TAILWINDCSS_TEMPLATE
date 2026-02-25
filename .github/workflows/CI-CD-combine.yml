@@ -2,7 +2,7 @@ name: CI-CD-combined
 
 on:
   push:
-    branches: ["dev/feature/auth_chat"]
+    branches: ["dev/feature/auth_chat_post_group"]
 
 jobs:
   detect-changes:
@@ -86,8 +86,9 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_KEY }}
           script: |
-            cd /opt/vite-template
+            cd /opt/repo/REACTVITE_TAILWINDCSS_TEMPLATE
             sed -i "s|IMAGE_FE=.*|IMAGE_FE=$IMAGE_FE:$VERSION|" .env
+            git pull
             docker compose pull frontend
             docker compose up -d frontend
             docker image prune -f
