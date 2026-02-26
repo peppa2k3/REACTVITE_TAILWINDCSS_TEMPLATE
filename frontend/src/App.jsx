@@ -24,6 +24,8 @@ import GroupDetail from './pages/GroupDetail';
 import { GroupProvider } from './pages/Groups';
 import CreateGroupModal from './components/groups/CreateGroupModal';
 import ProfilePage from './pages/ProfilePage.demo';
+import Settings from './pages/Settings';
+import { SettingsProvider } from './contexts/SettingsContext';
 
 function App() {
   return (
@@ -70,10 +72,8 @@ function App() {
             </PublicRoute>
           }
         />
-
         {/* Google OAuth Callback */}
         <Route path="/auth/callback" element={<GoogleAuthCallback />} />
-
         {/* Protected Routes - yêu cầu đăng nhập */}
         <Route
           path="/home"
@@ -108,6 +108,16 @@ function App() {
               <ProfilePage />
             </ProtectedRoute>
           }
+        />{' '}
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <SettingsProvider>
+                <Settings />
+              </SettingsProvider>
+            </ProtectedRoute>
+          }
         />
         {/* Admin Routes - yêu cầu đăng nhập và role admin */}
         <Route
@@ -126,7 +136,6 @@ function App() {
             </AdminRoute>
           }
         />
-
         {/* Default Route */}
         <Route path="/" element={<Navigate to="/home" replace />} />
         <Route path="*" element={<Navigate to="/home" replace />} />

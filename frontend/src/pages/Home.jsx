@@ -17,6 +17,9 @@ const Home = () => {
   function navigateNewsfeed() {
     navigate('/newsfeed');
   }
+  function navigator(x = '/') {
+    navigate(x);
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
       {/* Navbar */}
@@ -149,7 +152,6 @@ const Home = () => {
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Secure Authentication</h3>
             <p className="text-gray-600 text-sm">JWT-based authentication with refresh tokens</p>
           </div>
-
           <div className="bg-white p-6 rounded-xl shadow-md">
             <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
               <svg
@@ -169,7 +171,6 @@ const Home = () => {
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Role-Based Access</h3>
             <p className="text-gray-600 text-sm">Protected routes for users and admins</p>
           </div>
-
           <div className="bg-white p-6 rounded-xl shadow-md">
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
               <svg
@@ -226,6 +227,44 @@ const Home = () => {
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Newsfeed</h3>
             <p className="text-gray-600 text-sm">Protected routes for users and admins</p>
+          </div>{' '}
+          <div className="bg-white p-6 rounded-xl shadow-md" onClick={() => navigator('/settings')}>
+            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+              <svg
+                className="w-6 h-6 text-purple-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Settings</h3>
+            <p className="text-gray-600 text-sm">Settings</p>
+          </div>{' '}
+          <div className="bg-white p-6 rounded-xl shadow-md" onClick={() => navigator('/friends')}>
+            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+              <svg
+                className="w-6 h-6 text-purple-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Friends</h3>
+            <p className="text-gray-600 text-sm">Friends</p>
           </div>
         </div>
       </main>
