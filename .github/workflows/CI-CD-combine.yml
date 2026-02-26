@@ -52,8 +52,8 @@ jobs:
           key: ${{ secrets.VPS_KEY }}
           script: |
             cd /opt/repo/REACTVITE_TAILWINDCSS_TEMPLATE
-            sed -i "s|IMAGE_BE=.*|IMAGE_BE=$IMAGE_BE:$VERSION|" .env
             git pull
+            sed -i "s|IMAGE_BE=.*|IMAGE_BE=${{ env.IMAGE_BE }}:${{ env.VERSION }}|" .env
             docker compose pull backend
             docker compose up -d backend
             docker image prune -f
@@ -88,8 +88,8 @@ jobs:
           key: ${{ secrets.VPS_KEY }}
           script: |
             cd /opt/repo/REACTVITE_TAILWINDCSS_TEMPLATE
-            sed -i "s|IMAGE_FE=.*|IMAGE_FE=$IMAGE_FE:$VERSION|" .env
             git pull
+            sed -i "s|IMAGE_FE=.*|IMAGE_FE=${{ env.IMAGE_FE }}:${{ env.VERSION }}|" .env
             docker compose pull frontend
             docker compose up -d frontend
             docker image prune -f
