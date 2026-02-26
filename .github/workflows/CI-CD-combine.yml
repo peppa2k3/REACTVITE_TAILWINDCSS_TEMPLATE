@@ -53,7 +53,11 @@ jobs:
           script: |
             cd /opt/repo/REACTVITE_TAILWINDCSS_TEMPLATE
             git pull
+<<<<<<< HEAD
             sed -i "s|IMAGE_BE=.*|IMAGE_BE=${{ env.IMAGE_BE }}:${{ env.VERSION }}|" .env
+=======
+            sed -i "s|IMAGE_BE=.*|IMAGE_BE=$IMAGE_BE:$VERSION|" .env
+>>>>>>> 06b1517e78e9eee88ef87246dbb628219a11e16b
             docker compose pull backend
             docker compose up -d backend
             docker image prune -f
