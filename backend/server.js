@@ -32,6 +32,7 @@ import postRoutes from "./routes/postRoutes.js";
 import videoCallRoutes from "./routes/videoCallRoutes.js";
 import groupRoutes from "./routes/groupRoutes.js";
 import settingRoutes from "./routes/settingsRoutes.js";
+import friendRoutes from "./routes/friendRoutes.js";
 import { initializeSocket } from "./socket/chatSocket.js";
 
 dotenv.config();
@@ -88,6 +89,7 @@ app.use("/api/video", videoCallRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/groups", groupRoutes);
 app.use("/api/settings", settingRoutes);
+app.use("/api/friends", friendRoutes);
 // Health check
 app.get("/api/health", (req, res) => {
   res.json({ status: "OK", timestamp: new Date().toISOString() });

@@ -21,11 +21,14 @@ import SocketTest from './SocketTest';
 import Newsfeed from './pages/Newsfeed';
 import GroupHeader from './components/groups/GroupHeader';
 import GroupDetail from './pages/GroupDetail';
-import { GroupProvider } from './pages/Groups';
+import Groups from './pages/Groups';
+import { GroupProvider } from './contexts/GroupContext';
 import CreateGroupModal from './components/groups/CreateGroupModal';
 import ProfilePage from './pages/ProfilePage.demo';
 import Settings from './pages/Settings';
 import { SettingsProvider } from './contexts/SettingsContext';
+import { FriendProvider } from './contexts/FriendContext';
+import FriendsPage from './pages/Friends';
 
 function App() {
   return (
@@ -97,7 +100,9 @@ function App() {
           path="/groups"
           element={
             <ProtectedRoute>
-              <CreateGroupModal />
+              <GroupProvider>
+                <Groups />
+              </GroupProvider>
             </ProtectedRoute>
           }
         />
@@ -116,6 +121,16 @@ function App() {
               <SettingsProvider>
                 <Settings />
               </SettingsProvider>
+            </ProtectedRoute>
+          }
+        />{' '}
+        <Route
+          path="/friend"
+          element={
+            <ProtectedRoute>
+              <FriendProvider>
+                <FriendsPage />
+              </FriendProvider>
             </ProtectedRoute>
           }
         />
