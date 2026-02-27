@@ -1,15 +1,67 @@
-name: CI-CD-combined
+# ============================================================
+# CI/CD TEMPLATE - MERN STACK (React + Node.js + Docker + VPS)
+# ============================================================
+# HƯỚNG DẪN SỬ DỤNG:
+#   1. Copy file này vào .github/workflows/ci-cd.yml
+#   2. Tìm & thay thế tất cả biến trong phần "PROJECT CONFIG" bên dưới
+#   3. Thêm Secrets vào GitHub repo (Settings → Secrets and variables → Actions)
+#
+# SECRETS CẦN THIẾT:
+#   DOCKER_USERNAME     - Docker Hub username
+#   DOCKER_PASSWORD     - Docker Hub password / access token
+#   VPS_HOST            - IP hoặc domain của VPS
+#   VPS_USER            - SSH username (thường là root hoặc ubuntu)
+#   VPS_KEY             - Nội dung private SSH key (-----BEGIN OPENSSH PRIVATE KEY-----)
+# ============================================================
+
+# ------------------------------------------------------------------ #
+#  PROJECT CONFIG — chỉ cần sửa phần này khi dùng lại template        #
+# ------------------------------------------------------------------ #
+env:
+  # Docker Hub images
+  DOCKER_IMAGE_BE: peppa2k3/vite-template-backend # <-- THAY ĐỔI
+  DOCKER_IMAGE_FE: peppa2k3/vite-template-frontend # <-- THAY ĐỔI
+
+  # Đường dẫn project trên VPS
+  VPS_PROJECT_DIR: /opt/repo/REACTVITE_TAILWINDCSS_TEMPLATE # <-- THAY ĐỔI
+
+  # Tên service trong docker-compose.yml
+  COMPOSE_SERVICE_BE: backend # <-- THAY ĐỔI nếu khác
+  COMPOSE_SERVICE_FE: frontend # <-- THAY ĐỔI nếu khác
+
+  # Tên biến trong file .env trên VPS
+  ENV_KEY_BE: IMAGE_BE # <-- THAY ĐỔI nếu khác
+  ENV_KEY_FE: IMAGE_FE # <-- THAY ĐỔI nếu khác
+# ------------------------------------------------------------------ #
+
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: ["dev/feature/auth_chat_post_group"]
+    branches:
+      - main
+      - develop
+      - "dev/feature/**" # match tất cả feature branches
+  pull_request:
+    branches:
+      - main
+      - develop
+
+# Hủy run cũ nếu có run mới trên cùng branch (tiết kiệm phút CI)
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
+  # ============================================================
+  # JOB 1: Detect thay đổi — chỉ build/deploy phần có thay đổi
+  # ============================================================
   detect-changes:
+    name: "🔍 Detect Changes"
     runs-on: ubuntu-latest
     outputs:
-      frontend: ${{ steps.filter.outputs.frontend }}
       backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
     steps:
       - uses: actions/checkout@v4
 
@@ -17,14 +69,110 @@ jobs:
         id: filter
         with:
           filters: |
-            frontend:
-              - 'frontend/**'
             backend:
               - 'backend/**'
-  build-deploy-backend:
+              - 'Docker-compose.yml'
+            frontend:
+              - 'frontend/**'
+              - 'Docker-compose.yml'
+
+  # ============================================================
+  # JOB 2: Lint & Test Backend
+  # ============================================================
+  test-backend:
+    name: "🧪 Test Backend"
     needs: detect-changes
     if: needs.detect-changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
+
+    # Spin up MongoDB service để chạy integration test
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ping:1})'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint --if-present
+
+      - name: Run tests
+        run: npm test --if-present
+        env:
+          NODE_ENV: test
+          MONGO_URI: mongodb://localhost:27017/testdb
+          JWT_SECRET: test-secret-do-not-use-in-prod
+          # Thêm các biến môi trường test khác nếu cần
+
+  # ============================================================
+  # JOB 3: Lint & Test Frontend
+  # ============================================================
+  test-frontend:
+    name: "🧪 Test Frontend"
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint --if-present
+
+      - name: Run tests
+        run: npm test --if-present -- --run # --run để Vitest không watch
+
+      - name: Build check (đảm bảo build không lỗi)
+        run: npm run build
+        env:
+          # Truyền VITE_ env vars cho build check nếu cần
+          VITE_API_URL: http://localhost:5000
+
+  # ============================================================
+  # JOB 4: Build & Push Backend image
+  # ============================================================
+  build-backend:
+    name: "🐳 Build Backend"
+    needs: [detect-changes, test-backend]
+    if: |
+      needs.detect-changes.outputs.backend == 'true' &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/dev/feature/'))
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.meta.outputs.version }}
 
     steps:
       - uses: actions/checkout@v4
@@ -34,52 +182,180 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Set backend version
-        run: |
-          echo "VERSION=dev-${GITHUB_SHA::7}" >> $GITHUB_ENV
-          echo "IMAGE_BE=peppa2k3/vite-template-backend" >> $GITHUB_ENV
+      - uses: docker/setup-buildx-action@v3
 
-      - name: Build & push backend
+      - name: Generate image tag
+        id: meta
         run: |
-          docker build -t $IMAGE_BE:$VERSION ./backend
-          docker push $IMAGE_BE:$VERSION
+          BRANCH=$(echo "${GITHUB_REF#refs/heads/}" | sed 's/\//-/g')
+          VERSION="${BRANCH}-${GITHUB_SHA::7}"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "IMAGE_TAG=${VERSION}" >> $GITHUB_ENV
 
-      - name: Deploy backend to VPS
+      - name: Build & push backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ env.DOCKER_IMAGE_BE }}:${{ env.IMAGE_TAG }}
+            ${{ env.DOCKER_IMAGE_BE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ============================================================
+  # JOB 5: Build & Push Frontend image
+  # ============================================================
+  build-frontend:
+    name: "🐳 Build Frontend"
+    needs: [detect-changes, test-frontend]
+    if: |
+      needs.detect-changes.outputs.frontend == 'true' &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/dev/feature/'))
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.meta.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Generate image tag
+        id: meta
+        run: |
+          BRANCH=$(echo "${GITHUB_REF#refs/heads/}" | sed 's/\//-/g')
+          VERSION="${BRANCH}-${GITHUB_SHA::7}"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "IMAGE_TAG=${VERSION}" >> $GITHUB_ENV
+
+      - name: Build & push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ${{ env.DOCKER_IMAGE_FE }}:${{ env.IMAGE_TAG }}
+            ${{ env.DOCKER_IMAGE_FE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          # Build args nếu cần truyền VITE_ vào Dockerfile
+          # build-args: |
+          #   VITE_API_URL=${{ secrets.VITE_API_URL }}
+
+  # ============================================================
+  # JOB 6: Test kết nối VPS (health check SSH trước khi deploy)
+  # ============================================================
+  check-vps:
+    name: "🔌 Check VPS Connection"
+    needs: [build-backend, build-frontend]
+    # Chạy nếu ít nhất 1 trong 2 job build thành công (dùng always() + kiểm tra result)
+    if: |
+      always() &&
+      (needs.build-backend.result == 'success' || needs.build-frontend.result == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test SSH connection to VPS
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_KEY }}
           script: |
-            cd /opt/repo/REACTVITE_TAILWINDCSS_TEMPLATE
-            git pull
-            sed -i "s|IMAGE_BE=.*|IMAGE_BE=${{ env.IMAGE_BE }}:${{ env.VERSION }}|" .env
-            docker compose pull backend
-            docker compose up -d backend
-            docker image prune -f
-  build-deploy-frontend:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.frontend == 'true'
+            echo "✅ SSH connection OK"
+            echo "Hostname: $(hostname)"
+            echo "Uptime:   $(uptime -p)"
+            docker --version
+            docker compose version
+            # Kiểm tra project dir tồn tại
+            if [ ! -d "${{ env.VPS_PROJECT_DIR }}" ]; then
+              echo "❌ Project directory not found: ${{ env.VPS_PROJECT_DIR }}"
+              exit 1
+            fi
+            echo "✅ Project directory exists"
+
+  # ============================================================
+  # JOB 7: Deploy Backend lên VPS
+  # ============================================================
+  deploy-backend:
+    name: "🚀 Deploy Backend"
+    needs: [build-backend, check-vps]
+    if: needs.build-backend.result == 'success' && needs.check-vps.result == 'success'
     runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
 
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: docker/login-action@v3
+      - name: Deploy backend to VPS
+        uses: appleboy/ssh-action@v1
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          envs: DOCKER_IMAGE_BE,ENV_KEY_BE,COMPOSE_SERVICE_BE,VPS_PROJECT_DIR
+          script: |
+            set -e
+            cd ${{ env.VPS_PROJECT_DIR }}
 
-      - name: Set frontend version
-        run: |
-          echo "VERSION=dev-${GITHUB_SHA::7}" >> $GITHUB_ENV
-          echo "IMAGE_FE=peppa2k3/vite-template-frontend" >> $GITHUB_ENV
+            echo "📥 Pulling latest code..."
+            git pull origin ${{ github.ref_name }} || git pull origin develop
 
-      - name: Build & push frontend
-        run: |
-          docker build -t $IMAGE_FE:$VERSION ./frontend
-          docker push $IMAGE_FE:$VERSION
+            BRANCH=$(echo "${{ github.ref_name }}" | sed 's/\//-/g')
+            VERSION="${BRANCH}-${{ github.sha::7 }}"
+            FULL_IMAGE="${{ env.DOCKER_IMAGE_BE }}:${VERSION}"
 
+            echo "🔄 Updating .env → ${{ env.ENV_KEY_BE }}=${FULL_IMAGE}"
+            sed -i "s|${{ env.ENV_KEY_BE }}=.*|${{ env.ENV_KEY_BE }}=${FULL_IMAGE}|" .env
+
+            echo "📦 Pulling new image..."
+            docker compose pull ${{ env.COMPOSE_SERVICE_BE }}
+
+            echo "♻️  Restarting backend container..."
+            docker compose up -d --no-deps ${{ env.COMPOSE_SERVICE_BE }}
+
+            echo "🧹 Pruning old images..."
+            docker image prune -f
+
+            echo "✅ Backend deployed: ${FULL_IMAGE}"
+
+      - name: Health check backend
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          script: |
+            # Đợi container khởi động
+            sleep 8
+            # Thay <PORT> và <HEALTH_ENDPOINT> phù hợp với project
+            # Ví dụ: curl -f http://localhost:5000/api/health
+            HEALTH_URL="http://localhost:5000/api/health"   # <-- THAY ĐỔI
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" $HEALTH_URL || echo "000")
+            if [ "$STATUS" != "200" ]; then
+              echo "❌ Health check failed (HTTP $STATUS) — rolling back..."
+              cd ${{ env.VPS_PROJECT_DIR }}
+              docker compose restart ${{ env.COMPOSE_SERVICE_BE }}
+              exit 1
+            fi
+            echo "✅ Health check passed (HTTP $STATUS)"
+
+  # ============================================================
+  # JOB 8: Deploy Frontend lên VPS
+  # ============================================================
+  deploy-frontend:
+    name: "🚀 Deploy Frontend"
+    needs: [build-frontend, check-vps]
+    if: needs.build-frontend.result == 'success' && needs.check-vps.result == 'success'
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
+
+    steps:
       - name: Deploy frontend to VPS
         uses: appleboy/ssh-action@v1
         with:
@@ -87,9 +363,71 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_KEY }}
           script: |
-            cd /opt/repo/REACTVITE_TAILWINDCSS_TEMPLATE
-            git pull
-            sed -i "s|IMAGE_FE=.*|IMAGE_FE=${{ env.IMAGE_FE }}:${{ env.VERSION }}|" .env
-            docker compose pull frontend
-            docker compose up -d frontend
+            set -e
+            cd ${{ env.VPS_PROJECT_DIR }}
+
+            echo "📥 Pulling latest code..."
+            git pull origin ${{ github.ref_name }} || git pull origin develop
+
+            BRANCH=$(echo "${{ github.ref_name }}" | sed 's/\//-/g')
+            VERSION="${BRANCH}-${{ github.sha::7 }}"
+            FULL_IMAGE="${{ env.DOCKER_IMAGE_FE }}:${VERSION}"
+
+            echo "🔄 Updating .env → ${{ env.ENV_KEY_FE }}=${FULL_IMAGE}"
+            sed -i "s|${{ env.ENV_KEY_FE }}=.*|${{ env.ENV_KEY_FE }}=${FULL_IMAGE}|" .env
+
+            echo "📦 Pulling new image..."
+            docker compose pull ${{ env.COMPOSE_SERVICE_FE }}
+
+            echo "♻️  Restarting frontend container..."
+            docker compose up -d --no-deps ${{ env.COMPOSE_SERVICE_FE }}
+
+            echo "🧹 Pruning old images..."
             docker image prune -f
+
+            echo "✅ Frontend deployed: ${FULL_IMAGE}"
+
+      - name: Health check frontend
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          script: |
+            sleep 5
+            # Thay <PORT> phù hợp với nginx/frontend port
+            HEALTH_URL="http://localhost:80"                 # <-- THAY ĐỔI
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" $HEALTH_URL || echo "000")
+            if [ "$STATUS" != "200" ]; then
+              echo "❌ Frontend health check failed (HTTP $STATUS)"
+              exit 1
+            fi
+            echo "✅ Frontend health check passed (HTTP $STATUS)"
+
+  # ============================================================
+  # JOB 9: Notify kết quả (tùy chọn — xóa nếu không dùng)
+  # ============================================================
+  notify:
+    name: "📣 Notify Result"
+    needs: [deploy-backend, deploy-frontend]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Summary
+        run: |
+          echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Service  | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend  | ${{ needs.deploy-backend.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend | ${{ needs.deploy-frontend.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit   | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Branch   | \`${{ github.ref_name }}\` |" >> $GITHUB_STEP_SUMMARY
+
+      # Uncomment để gửi Slack notification
+      # - name: Slack Notification
+      #   uses: rtCamp/action-slack-notify@v2
+      #   env:
+      #     SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+      #     SLACK_TITLE: "Deployment ${{ job.status }}"
+      #     SLACK_MESSAGE: "Branch: ${{ github.ref_name }} | Commit: ${{ github.sha }}"
