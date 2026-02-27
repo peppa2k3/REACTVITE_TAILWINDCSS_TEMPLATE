@@ -306,7 +306,7 @@ jobs:
             git pull origin ${{ github.ref_name }} || git pull origin develop
 
             BRANCH=$(echo "${{ github.ref_name }}" | sed 's/\//-/g')
-            VERSION="${BRANCH}-${{ github.sha::7 }}"
+            VERSION="${BRANCH}-${GITHUB_SHA::7}"
             FULL_IMAGE="${{ env.DOCKER_IMAGE_BE }}:${VERSION}"
 
             echo "🔄 Updating .env → ${{ env.ENV_KEY_BE }}=${FULL_IMAGE}"
@@ -370,7 +370,7 @@ jobs:
             git pull origin ${{ github.ref_name }} || git pull origin develop
 
             BRANCH=$(echo "${{ github.ref_name }}" | sed 's/\//-/g')
-            VERSION="${BRANCH}-${{ github.sha::7 }}"
+            VERSION="${BRANCH}-${GITHUB_SHA::7}"
             FULL_IMAGE="${{ env.DOCKER_IMAGE_FE }}:${VERSION}"
 
             echo "🔄 Updating .env → ${{ env.ENV_KEY_FE }}=${FULL_IMAGE}"
