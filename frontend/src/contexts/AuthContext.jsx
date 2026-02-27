@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import api from '../utils/api';
-
+import { API_BASE_URL } from './../env/apiURL';
 const AuthContext = createContext();
 
 export const useAuth = () => {
@@ -90,9 +90,37 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
     }
   };
+  useEffect(() => {
+    const handleCallback = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+      const refreshToken = params.get('refreshToken');
 
+      if (token) {
+        localStorage.setItem('accessToken', token);
+        if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+
+        // Gọi /me để lấy thông tin user
+        try {
+          const res = await api.get('/auth/me');
+          localStorage.setItem('user', JSON.stringify(res.data.data));
+          setUser(res.data.data);
+          setToken(token);
+        } catch (err) {
+          console.error(err);
+        }
+
+        // Xóa query params khỏi URL (cho đẹp)
+        window.history.replaceState({}, document.title, '/dashboard'); // hoặc trang bạn muốn
+      }
+    };
+
+    if (window.location.pathname === '/auth/callback') {
+      handleCallback();
+    }
+  }, []);
   const loginWithGoogle = () => {
-    window.location.href = '/api/auth/google';
+    window.location.href = `${API_BASE_URL}/api/auth/google`;
   };
 
   const value = {

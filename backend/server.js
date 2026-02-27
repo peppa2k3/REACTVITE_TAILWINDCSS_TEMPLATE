@@ -35,7 +35,10 @@ import settingRoutes from "./routes/settingsRoutes.js";
 import friendRoutes from "./routes/friendRoutes.js";
 import { initializeSocket } from "./socket/chatSocket.js";
 
+import { configureGoogleAuth } from "./config/passport.js";
 dotenv.config();
+
+configureGoogleAuth();
 
 const app = express();
 const server = http.createServer(app);
@@ -68,7 +71,6 @@ const __dirname = path.dirname(__filename);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Create uploads directory if it doesn't exist
-// const fs = require("fs");
 import fs from "fs";
 const uploadsDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadsDir)) {

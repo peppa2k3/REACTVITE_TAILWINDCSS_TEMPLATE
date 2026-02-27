@@ -1,60 +1,30 @@
+// frontend/src/pages/GoogleAuthCallback.jsx
+// Trang này chỉ hiển thị loading spinner.
+// Toàn bộ logic xử lý token đã được handle trong AuthContext (useEffect theo pathname).
 import { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const GoogleAuthCallback = () => {
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    const token = searchParams.get('token');
-    const refreshToken = searchParams.get('refreshToken');
-    const error = searchParams.get('error');
-
-    if (error) {
-      toast.error('Google authentication failed');
-      navigate('/login');
-      return;
-    }
-
-    if (token) {
-      // Save tokens
-      localStorage.setItem('accessToken', token);
-      if (refreshToken) {
-        localStorage.setItem('refreshToken', refreshToken);
+    // Khi AuthContext đã xử lý xong token và set user → redirect
+    if (!loading) {
+      if (user) {
+        navigate('/', { replace: true });
+      } else {
+        navigate('/login?error=google_failed', { replace: true });
       }
-
-      // Fetch user info
-      fetch('/api/auth/me', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success) {
-            localStorage.setItem('user', JSON.stringify(data.data));
-            toast.success('Login successful!');
-            navigate('/home');
-          } else {
-            throw new Error('Failed to get user info');
-          }
-        })
-        .catch(() => {
-          toast.error('Authentication failed');
-          navigate('/login');
-        });
-    } else {
-      toast.error('Authentication failed');
-      navigate('/login');
     }
-  }, [navigate, searchParams]);
+  }, [user, loading, navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">Completing authentication...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
+        <p className="text-gray-600 text-sm">Đang đăng nhập với Google...</p>
       </div>
     </div>
   );
